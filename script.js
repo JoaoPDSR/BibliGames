@@ -16,8 +16,23 @@ function createGameCard(game, index) {
   const card = document.createElement('article');
   card.className = 'game-card';
 
+  const titleAndLogo = document.createElement('div');
+  titleAndLogo.className = 'title-and-logo';
+
   const title = document.createElement('h3');
   title.textContent = game.title;
+
+  titleAndLogo.append(title);
+
+  if (game.logo) {
+    const logoImg = document.createElement('img');
+    logoImg.src = game.logo;
+    logoImg.alt = `Logo de ${game.title}`;
+    logoImg.className = 'game-logo';
+    titleAndLogo.append(logoImg);
+  }
+
+  card.append(titleAndLogo);
 
   const metaRow = document.createElement('div');
   metaRow.className = 'game-meta';
@@ -35,6 +50,8 @@ function createGameCard(game, index) {
   rating.textContent = game.rating ? `Nota ${game.rating}` : 'Sem nota';
 
   metaRow.append(platform, year, rating);
+
+  card.append(metaRow);
 
   const details = document.createElement('div');
   details.className = 'game-details';
@@ -56,7 +73,7 @@ function createGameCard(game, index) {
 
   actions.append(removeButton);
 
-  card.append(title, metaRow, details, actions);
+  card.append(details, actions);
   return card;
 }
 
@@ -81,6 +98,22 @@ function addGame(event) {
   event.preventDefault();
 
   const formData = new FormData(form);
+  const logoFile = formData.get('logo');
+  
+  let logoBase64 = '';
+  if (logoFile && logoFile.size > 0) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      logoBase64 = e.target.result;
+      saveGameWithLogo(formData, logoBase64);
+    };
+    reader.readAsDataURL(logoFile);
+  } else {
+    saveGameWithLogo(formData, '');
+  }
+}
+
+function saveGameWithLogo(formData, logoBase64) {
   const newGame = {
     title: formData.get('title').trim(),
     platform: formData.get('platform').trim(),
@@ -90,6 +123,7 @@ function addGame(event) {
     gameplay: formData.get('gameplay').trim(),
     story: formData.get('story').trim(),
     notes: formData.get('notes').trim(),
+    logo: logoBase64,
   };
 
   if (!newGame.title || !newGame.platform) {
